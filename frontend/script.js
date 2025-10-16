@@ -4,15 +4,52 @@ let conversationHistory = [];
 // API endpoint
 const API_URL = 'http://localhost:5000/api/chat';
 
+function formatTime(date = new Date()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function linkify(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, function(url) {
+        const safeUrl = url.replace(/"/g, '&quot;');
+        return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
+}
+
+function setWelcomeTime() {
+    const el = document.getElementById('welcomeTime');
+    if (el) el.textContent = formatTime();
+}
+
+function applySavedTheme() {
+    const saved = localStorage.getItem('theme') || 'light';
+    if (saved === 'dark') document.documentElement.classList.add('dark');
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) toggle.querySelector('.icon').textContent = document.documentElement.classList.contains('dark') ? '🌞' : '🌙';
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
+    const themeToggle = document.getElementById('themeToggle');
+
+    applySavedTheme();
+    setWelcomeTime();
+    
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            themeToggle.querySelector('.icon').textContent = isDark ? '🌞' : '🌙';
+        });
+    }
     
     // Auto-resize textarea
     input.addEventListener('input', function() {
         this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        this.style.height = Math.min(this.scrollHeight, 140) + 'px';
     });
     
     // Send message on Enter (but allow Shift+Enter for new line)
@@ -97,14 +134,35 @@ function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}-message`;
     
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = sender === 'user' ? '🧑' : '🤖';
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     
     const textP = document.createElement('p');
-    textP.textContent = text;
+    textP.innerHTML = linkify(text);
+    
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = formatTime();
     
     contentDiv.appendChild(textP);
-    messageDiv.appendChild(contentDiv);
+    bubble.appendChild(contentDiv);
+    bubble.appendChild(meta);
+    
+    if (sender === 'user') {
+        messageDiv.appendChild(bubble);
+        messageDiv.appendChild(avatar);
+    } else {
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+    }
+    
     messagesContainer.appendChild(messageDiv);
     
     // Scroll to bottom
@@ -118,6 +176,13 @@ function showTypingIndicator() {
     typingDiv.className = 'message bot-message typing-indicator';
     typingDiv.id = 'typingIndicator';
     
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = '🤖';
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     
@@ -126,7 +191,9 @@ function showTypingIndicator() {
     dotsDiv.innerHTML = '<span></span><span></span><span></span>';
     
     contentDiv.appendChild(dotsDiv);
-    typingDiv.appendChild(contentDiv);
+    bubble.appendChild(contentDiv);
+    typingDiv.appendChild(avatar);
+    typingDiv.appendChild(bubble);
     messagesContainer.appendChild(typingDiv);
     
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
