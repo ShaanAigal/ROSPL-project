@@ -5,14 +5,11 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize Groq client
-# Make sure to set your GROQ_API_KEY environment variable
-api_key = os.environ.get("GROQ_API_KEY")
-
-if not api_key:
-    raise ValueError("GROQ_API_KEY environment variable is not set. Please set it before running the application.")
-
-client = Groq(api_key=api_key)
+def _get_client():
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return None
+    return Groq(api_key=api_key)
 
 def get_groq_response(user_message, conversation_history=[]):
     """
@@ -27,6 +24,9 @@ def get_groq_response(user_message, conversation_history=[]):
         str: The bot's response
     """
     try:
+        client = _get_client()
+        if client is None:
+            return "Groq API key is not set. Please configure GROQ_API_KEY in your environment or .env file."
         # Build messages array with conversation history
         messages = []
         
@@ -65,6 +65,9 @@ def get_available_models():
     Get list of available Groq models
     """
     try:
+        client = _get_client()
+        if client is None:
+            return []
         models = client.models.list()
         return [model.id for model in models.data]
     except Exception as e:

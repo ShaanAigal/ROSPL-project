@@ -3,12 +3,13 @@ from flask_cors import CORS
 from utils import get_groq_response
 import os
 
-app = Flask(__name__, static_folder='../frontend', static_url_path='')
+static_folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
+app = Flask(__name__, static_folder=static_folder_path, static_url_path='')
 CORS(app)
 
 @app.route('/')
 def index():
-    return send_from_directory('../frontend', 'index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -35,4 +36,4 @@ def chat():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=5000)
