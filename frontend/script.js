@@ -2,7 +2,7 @@
 let conversationHistory = [];
 
 // API endpoint
-const API_URL = 'http://localhost:5000/api/chat';
+const API_URL = '/api/chat';
 
 function formatTime(date = new Date()) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
